@@ -10,6 +10,12 @@ npm install -g scopelock
 
 ---
 
+## Companion Skill
+
+The `skills/scope-enforcement/SKILL.md` file is a structured workflow for AI agents that enforces scopelock boundaries across every phase of a coding session — before writing code, before every commit, and before review/ship. Load it into any agent that supports skills (Antigravity, Claude Code, Gemini CLI, Cursor).
+
+---
+
 ## The Problem
 
 You ask an AI agent to fix the login button. It also refactors your auth middleware, updates 3 unrelated components, and breaks a working API route. You have no pre-commit guardrail that would have stopped it.

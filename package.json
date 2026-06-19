@@ -10,5 +10,6 @@
     "test": "node test/run.js"
   },
   "author": "Emmanuel",
-  "license": "MIT"
+  "license": "MIT",
+  "skills": "./skills"
 }
