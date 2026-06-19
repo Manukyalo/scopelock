@@ -1,0 +1,5 @@
+# Test artifacts
+test/tmp_repo/
+
+# Dev files
+.gitignore
