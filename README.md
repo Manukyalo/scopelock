@@ -24,20 +24,29 @@ npm install -g @manukyalo/scopelock
 
 ## Commands
 
-```bash
-  scopelock init                                    Scan repo and generate .scopelock.json
-  scopelock lock <file>[:<func>] [reason]           Lock a file or a specific function
-  scopelock unlock <file>[:<func>] <reason>          Unlock (reason is mandatory)
-  scopelock seal <file> <reason>                    Permanent production-path lock (no override)
-  scopelock unseal <file> --human-approved=<ticket> <reason>  Release a seal
-  scopelock impact <file>                           Show all files that import this file
-  scopelock trust <file> <reason>                   Bypass Secret Sentinel for a specific file
-  scopelock save                                    Auto-snapshot repo state before an agent session
-  scopelock restore                                 Rollback to the last snapshot
-  scopelock context [task]                          Generate AI context block for a task
-  scopelock guard [--tests]                         Check git diff for violations and secret leaks
-  scopelock status                                  Show manifest summary
-```
+### 🛡️ Guardrails & Locks
+| Command | Description |
+| :--- | :--- |
+| `scopelock lock <file>[:<func>] [reason]` | Lock a file or a specific AST function |
+| `scopelock unlock <file>[:<func>] <reason>` | Unlock (reason is mandatory) |
+| `scopelock seal <file> <reason>` | Permanent production-path lock (cannot be unlocked normally) |
+| `scopelock unseal <file> --human-approved=<ticket> <reason>` | Release a seal with a Jira/PR ticket |
+| `scopelock guard [--tests]` | Wire as `pre-commit` to check diffs for violations & leaked secrets |
+| `scopelock trust <file> <reason>` | Explicitly bypass Secret Sentinel for a mock/test file |
+
+### 🛠️ Agent Tools (Godmode)
+| Command | Description |
+| :--- | :--- |
+| `scopelock impact <file>` | Show the Blast Radius (all files importing this file) before modifying it |
+| `scopelock save` | Auto-snapshot repo state into a hidden git stash before an agent session |
+| `scopelock restore` | Instant escape hatch: obliterate agent changes and restore the snapshot |
+| `scopelock context [task]` | Generate a token-efficient AI context block mapping the locked boundaries |
+
+### ⚙️ Core
+| Command | Description |
+| :--- | :--- |
+| `scopelock init` | Scan repo and generate `.scopelock.json` manifest |
+| `scopelock status` | Show a summary of all locked/sealed files |
 
 ### `scopelock lock` & `unlock`
 Lock a whole file or a specific named function. Unlock requires a reason that gets logged to history.
