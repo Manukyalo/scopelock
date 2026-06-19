@@ -71,18 +71,29 @@ function saveManifest(data) {
   fs.writeFileSync(MANIFEST_FILE, JSON.stringify(data, null, 2));
 }
 
+const DEPENDENCY_MANIFESTS = new Set([
+  'package.json', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
+  'requirements.txt', 'Pipfile', 'Pipfile.lock', 'poetry.lock',
+  'Cargo.toml', 'Cargo.lock', 'go.mod', 'go.sum'
+]);
+
 // Ensure a file entry exists in the manifest, creating it if needed.
 function ensureFileEntry(manifest, relativePath) {
   if (!manifest.files[relativePath]) {
-    manifest.files[relativePath] = { status: 'unscoped', functions: {}, history: [] };
+    // Auto-lock dependency manifests
+    const isDep = DEPENDENCY_MANIFESTS.has(path.basename(relativePath));
+    manifest.files[relativePath] = { 
+      status: isDep ? 'locked' : 'unscoped', 
+      functions: {}, 
+      history: isDep ? [{ timestamp: new Date().toISOString(), action: 'locked', reason: 'auto-locked dependency manifest' }] : []
+    };
   }
   if (!manifest.files[relativePath].functions) {
     manifest.files[relativePath].functions = {};
   }
 }
 
-// ─── Commands ─────────────────────────────────────────────────────────────────
-
+// Ensure entry exists for 'init' function
 function init() {
   if (fs.existsSync(MANIFEST_FILE)) {
     console.log(`.scopelock.json already exists. Use 'scopelock status' to view it.`);
@@ -90,13 +101,13 @@ function init() {
   }
 
   const files    = walkDir('.');
-  const manifest = { version: VERSION, files: {} };
+  const manifest = { version: VERSION, files: {}, allowedSecrets: {} };
   let   count    = 0;
 
   for (const f of files) {
     const relativePath = path.relative('.', f).replace(/\\/g, '/');
     if (relativePath === MANIFEST_FILE) continue;
-    manifest.files[relativePath] = { status: 'unscoped', functions: {}, history: [] };
+    ensureFileEntry(manifest, relativePath);
     count++;
   }
 
@@ -256,4 +267,31 @@ function status() {
   console.log('');
 }
 
-module.exports = { init, lock, unlock, status, getManifest, saveManifest };
+/**
+ * Allow a secret to be committed in a specific file.
+ *
+ * @param {string} file  "<file>"
+ * @param {string} reason  Mandatory reason string.
+ */
+function allowSecret(file, reason) {
+  const relativePath = file.replace(/\\/g, '/');
+  const manifest = getManifest();
+  
+  if (!manifest.allowedSecrets) {
+    manifest.allowedSecrets = {};
+  }
+  
+  if (!manifest.allowedSecrets[relativePath]) {
+    manifest.allowedSecrets[relativePath] = [];
+  }
+  
+  manifest.allowedSecrets[relativePath].push({
+    timestamp: new Date().toISOString(),
+    reason
+  });
+  
+  saveManifest(manifest);
+  console.log(`⚠️  Secret Sentinel bypassed for ${relativePath}. Reason: ${reason}`);
+}
+
+module.exports = { init, lock, unlock, allowSecret, status, getManifest, saveManifest };

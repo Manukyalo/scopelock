@@ -19,6 +19,7 @@ const { execSync }      = require('child_process');
 const { getManifest }   = require('./manifest');
 const { getChangedLines } = require('./diff');
 const { extractFunctions } = require('./parser');
+const { detectSecret }  = require('./secrets');
 
 function check() {
   const manifest = getManifest();
@@ -51,6 +52,27 @@ function check() {
     const normalizedFile = file.replace(/\\/g, '/');
     const entry          = manifest.files[normalizedFile];
 
+    const changedLines = getChangedLines(normalizedFile);
+
+    // ── Tier 0: Secret Sentinel ─────────────────────────────────────────────
+    if (changedLines.size > 0) {
+      // Check if this file has explicitly allowed secrets
+      const hasOverride = manifest.allowedSecrets && manifest.allowedSecrets[normalizedFile];
+      if (!hasOverride) {
+        for (const [lineNum, content] of changedLines.entries()) {
+          const secretType = detectSecret(content);
+          if (secretType) {
+            violations.push({
+              type: 'secret',
+              file: normalizedFile,
+              message: `SECRET LEAK [${secretType}] detected in '${normalizedFile}' on line ${lineNum}.`,
+            });
+            break; // One secret violation per file is enough
+          }
+        }
+      }
+    }
+
     // ── Tier 1: File-level lock ─────────────────────────────────────────────
     if (entry && entry.status === 'locked') {
       violations.push({
@@ -70,10 +92,6 @@ function check() {
 
     if (lockedFunctions.length === 0) continue;
 
-    // Get the line numbers that changed in this specific file
-    const changedLines = getChangedLines(normalizedFile);
-    if (changedLines.size === 0) continue;
-
     // Re-extract function boundaries from the current on-disk file
     const currentFunctions = extractFunctions(normalizedFile);
 
@@ -91,7 +109,7 @@ function check() {
       }
 
       // Check if any changed line falls within the function's boundaries
-      for (const line of changedLines) {
+      for (const line of changedLines.keys()) {
         if (line >= fn.startLine && line <= fn.endLine) {
           violations.push({
             type: 'function',

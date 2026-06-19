@@ -17,7 +17,7 @@ const HUNK_HEADER_RE = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/;
 
 /**
  * @param {string} filePath
- * @returns {Set<number>}  1-indexed line numbers that changed in the new file.
+ * @returns {Map<number, string>}  1-indexed line numbers -> line content that changed in the new file.
  */
 function getChangedLines(filePath) {
   let diffOutput;
@@ -31,9 +31,9 @@ function getChangedLines(filePath) {
     return new Set();
   }
 
-  if (!diffOutput.trim()) return new Set();
+  if (!diffOutput.trim()) return new Map();
 
-  const changedLines = new Set();
+  const changedLines = new Map();
   const lines        = diffOutput.split('\n');
   let   currentLine  = 0;
 
@@ -51,7 +51,8 @@ function getChangedLines(filePath) {
 
     if (line.startsWith('+')) {
       // Added/changed line in the new file
-      changedLines.add(currentLine);
+      // Strip the leading '+' before saving the content
+      changedLines.set(currentLine, line.substring(1));
       currentLine++;
     } else if (line.startsWith('-')) {
       // Deleted line — does NOT advance the new-file line counter

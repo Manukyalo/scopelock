@@ -61,6 +61,17 @@ switch (command) {
     manifest.status();
     break;
 
+  case 'allow-secret': {
+    const target = args[0];
+    const reason = args.slice(1).join(' ');
+    if (!target || !reason) {
+      console.error('Usage: scopelock allow-secret <file> <reason>');
+      process.exit(1);
+    }
+    manifest.allowSecret(target, reason);
+    break;
+  }
+
   default:
     console.log(`
 scopelock — Anti-hallucination scope locking for AI coding agents.
@@ -69,9 +80,11 @@ Usage:
   scopelock init                           Scan repo and generate .scopelock.json
   scopelock lock <file>[:<func>] [reason]  Lock a file or a specific function
   scopelock unlock <file>[:<func>] <reason> Unlock (reason is mandatory)
+  scopelock allow-secret <file> <reason>   Bypass Secret Sentinel for a specific file
   scopelock context [task]                 Generate AI context block for a task
-  scopelock check                          Check git diff for scope violations
+  scopelock check                          Check git diff for scope violations and secret leaks
   scopelock status                         Show manifest summary
+
 
 Examples:
   scopelock lock src/auth.ts

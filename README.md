@@ -8,53 +8,32 @@ npm install -g @manukyalo/scopelock
 
 `scopelock` solves a specific, well-documented problem: AI coding agents frequently exhibit scope creep — modifying files outside the intended change — and lack persistent project memory across sessions.
 
----
+`scopelock` acts as a physical guardrail (via a pre-commit hook) and an architectural memory bank (via the context block) to keep agents strictly confined to their authorized scope.
 
-## Companion Skill
+## Features
 
-`skills/scope-enforcement/SKILL.md` is a structured 3-checkpoint workflow for AI agents that enforces scopelock boundaries across every phase of a session. Load it into: **Antigravity**, **Claude Code**, **Gemini CLI**, **Cursor**, **Kiro**.
-
----
-
-## The Problem
-
-You ask an AI agent to fix the login button. It also refactors your auth middleware, updates 3 unrelated components, and breaks a working API route. You had no pre-commit guardrail to stop it.
-
-`scopelock` enforces scope at two levels:
-
-| Protection | What it stops |
-|------------|--------------|
-| **File-level** | Agent modifies any file marked `locked` |
-| **Function-level** | Agent modifies lines inside a locked function body, even if the surrounding file is `active` |
+- **File-level locks**: Run `scopelock lock src/auth.ts` to make the file read-only for agents.
+- **Function-level locks**: Don't want to lock the whole file? Lock specific AST functions so agents can only edit adjacent code.
+- **Dependency Lockdown**: Zero-trust dependency management. Automatically locks `package.json` and other dependency manifests on init to prevent silent dependency drift.
+- **Secret Sentinel**: A hard-blocking pre-commit scanner that physically prevents agents from committing AWS keys, Stripe tokens, or `.env` leaks.
+- **Zero dependencies**: Written in pure Node.js. Install it anywhere without bloating your `node_modules`.
 
 ---
 
 ## Commands
 
+```bash
+  scopelock init                           Scan repo and generate .scopelock.json
+  scopelock lock <file>[:<func>] [reason]  Lock a file or a specific function
+  scopelock unlock <file>[:<func>] <reason> Unlock (reason is mandatory)
+  scopelock allow-secret <file> <reason>   Bypass Secret Sentinel for a specific file
+  scopelock context [task]                 Generate AI context block for a task
+  scopelock check                          Check git diff for scope violations and secret leaks
+  scopelock status                         Show manifest summary
+```
+
 ### `scopelock init`
 Scan the repo and generate `.scopelock.json`. Automatically ignores `node_modules`, `.git`, `.next`, `dist`, `build`, `out`, `coverage`, and other build artifacts.
-
-```bash
-scopelock init
-```
-
-### `scopelock status`
-Print a human-readable summary of the manifest.
-
-```bash
-scopelock status
-
-# 📋  scopelock status
-#
-#   🔒  locked    — 3 file(s), 2 function(s)
-#   ✏️   active    — 1 file(s)
-#   ⬜  unscoped  — 98 file(s)
-#
-# Locked files:
-#   src/lib/supabase.ts
-#   src/middleware.ts
-#     └── middleware() [locked]
-```
 
 ### `scopelock lock <file>[:<function>] [reason]`
 Lock a whole file or a specific named function.
@@ -74,8 +53,15 @@ Unlock a file or function. Reason is mandatory and logged.
 scopelock unlock src/auth/token.ts:validateToken "fixing JWT expiry edge case"
 ```
 
+### `scopelock allow-secret <file> <reason>`
+Bypass the Secret Sentinel hard-block for a specific file (e.g., when intentionally committing a mock test key).
+
+```bash
+scopelock allow-secret test/run.js "this is a mock stripe key for testing"
+```
+
 ### `scopelock check`
-Two-tier scope violation check against `git diff HEAD`. Exits non-zero on violations.
+Two-tier scope violation check against `git diff HEAD`. Exits non-zero on violations or secret leaks. Wire this up as a `pre-commit` hook.
 
 ```bash
 scopelock check
@@ -85,57 +71,27 @@ scopelock check
 Output a token-efficient AI context block with all locks clearly flagged.
 
 ```bash
-scopelock context "Fix the broken checkout flow" | clip
+scopelock context "Update the login page"
+```
+```
+[SCOPE CONTEXT]
+Task: Update the login page
+
+Status:
+  🔒 locked   — 1 file(s)
+  ✏️ active   — 0 file(s)
+  ⬜ unscoped — 14 file(s)
+
+Locked files:
+  src/lib/supabase.ts
 ```
 
----
+## Agent Skill
 
-## Pre-commit Hook
+`scopelock` includes a native Agent Skill. 
+If you use an agent framework (like Antigravity or Cline) that supports Markdown skills, point it to `skills/scope-enforcement/SKILL.md` to automatically teach the agent how to use `scopelock` safely.
 
-```bash
-echo '#!/bin/sh
-scopelock check' > .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
-```
-
-Once wired, no agent or developer can commit a scope violation.
-
----
-
-## File Statuses
-
-| Status | Meaning |
-|--------|---------|
-| `unscoped` | Not yet classified |
-| `locked` | Stable — do not modify without an explicit `scopelock unlock` |
-| `active` | In scope for the current task |
-
----
-
-## Language Support for Function-level Locking
-
-| Language | Extensions |
-|----------|-----------|
-| JavaScript | `.js`, `.jsx`, `.mjs`, `.cjs` |
-| TypeScript | `.ts`, `.tsx` |
-| Python | `.py` |
-
-All other file types fall back to file-level locking automatically.
-
----
-
-## Commit `.scopelock.json`
+## Data Model
+All state is stored in `.scopelock.json` at the root of your repo.
 
 The manifest is project state, not a personal config. Commit it so your whole team — and all their AI agents — share the same scope boundaries.
-
----
-
-## Zero Dependencies
-
-Built entirely on Node.js built-ins (`fs`, `path`, `child_process`). No runtime dependencies.
-
----
-
-## License
-
-MIT
