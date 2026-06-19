@@ -93,11 +93,12 @@ function check(args = []) {
     }
 
     // ── Tier 1: File-level lock ─────────────────────────────────────────────
-    if (entry && entry.status === 'locked') {
+    if (entry && (entry.status === 'locked' || entry.status === 'superlocked')) {
+      const label = entry.status === 'superlocked' ? 'SUPERLOCKED' : 'LOCKED';
       violations.push({
         type: 'file',
         file: normalizedFile,
-        message: `File '${normalizedFile}' is LOCKED.`,
+        message: `File '${normalizedFile}' is ${label}.`,
       });
       continue; // No need to check functions if the whole file is locked
     }

@@ -17,6 +17,7 @@ const { execSync } = require('child_process');
 const manifest = require('../src/manifest');
 const context  = require('../src/context');
 const git      = require('../src/git');
+const blast    = require('../src/blast');
 
 const [,, command, ...args] = process.argv;
 
@@ -61,6 +62,40 @@ switch (command) {
   case 'status':
     manifest.status();
     break;
+
+  case 'blast-radius': {
+    const target = args[0];
+    if (!target) {
+      console.error('Usage: scopelock blast-radius <file>');
+      process.exit(1);
+    }
+    blast.printBlastRadius(target);
+    break;
+  }
+
+  case 'superlock': {
+    const target = args[0];
+    const reason = args.slice(1).join(' ') || 'production path — superlock applied';
+    if (!target) {
+      console.error('Usage: scopelock superlock <file> <reason>');
+      process.exit(1);
+    }
+    manifest.superlock(target, reason);
+    break;
+  }
+
+  case 'sudo-unlock': {
+    const target = args[0];
+    const ticketArg = args.find(a => a.startsWith('--human-approved='));
+    const ticket = ticketArg ? ticketArg.replace('--human-approved=', '') : null;
+    const reason = args.filter(a => !a.startsWith('--')).slice(1).join(' ');
+    if (!target || !ticket || !reason) {
+      console.error('Usage: scopelock sudo-unlock <file> --human-approved=<ticket> <reason>');
+      process.exit(1);
+    }
+    manifest.sudoUnlock(target, ticket, reason);
+    break;
+  }
 
   case 'allow-secret': {
     const target = args[0];
@@ -136,15 +171,18 @@ switch (command) {
 scopelock — Anti-hallucination scope locking for AI coding agents.
 
 Usage:
-  scopelock init                           Scan repo and generate .scopelock.json
-  scopelock lock <file>[:<func>] [reason]  Lock a file or a specific function
-  scopelock unlock <file>[:<func>] <reason> Unlock (reason is mandatory)
-  scopelock allow-secret <file> <reason>   Bypass Secret Sentinel for a specific file
-  scopelock context [task]                 Generate AI context block for a task
-  scopelock snapshot                       Auto-snapshot repo state before an agent session
-  scopelock revert                         Rollback to the last snapshot
-  scopelock check [--require-tests]        Check git diff for violations and test coverage
-  scopelock status                         Show manifest summary
+  scopelock init                                    Scan repo and generate .scopelock.json
+  scopelock lock <file>[:<func>] [reason]           Lock a file or a specific function
+  scopelock unlock <file>[:<func>] <reason>          Unlock (reason is mandatory)
+  scopelock superlock <file> <reason>               Permanent production-path lock (no override)
+  scopelock sudo-unlock <file> --human-approved=<ticket> <reason>  Release a superlock
+  scopelock blast-radius <file>                     Show all files that import this file
+  scopelock allow-secret <file> <reason>            Bypass Secret Sentinel for a specific file
+  scopelock snapshot                                Auto-snapshot repo state before an agent session
+  scopelock revert                                  Rollback to the last snapshot
+  scopelock context [task]                          Generate AI context block for a task
+  scopelock check [--require-tests]                 Check git diff for violations and secret leaks
+  scopelock status                                  Show manifest summary
 
 
 Examples:

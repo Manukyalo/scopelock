@@ -178,6 +178,63 @@ function lock(target, reason = 'manually locked') {
 }
 
 /**
+ * Superlock a file — permanent, override-resistant production path lock.
+ * Cannot be removed by 'unlock'. Requires 'sudo-unlock' with a human-approved ticket.
+ *
+ * @param {string} file   File path
+ * @param {string} reason Mandatory reason string
+ */
+function superlock(file, reason) {
+  const relativePath = file.replace(/\\/g, '/');
+  const manifest = getManifest();
+  ensureFileEntry(manifest, relativePath);
+  const entry = manifest.files[relativePath];
+
+  entry.status = 'superlocked';
+  entry.history.push({
+    timestamp: new Date().toISOString(),
+    action:    'superlocked',
+    reason,
+  });
+  saveManifest(manifest);
+  console.log(`🔐 SUPERLOCKED ${relativePath}. Only 'scopelock sudo-unlock' with a human-approved ticket can release this.`);
+}
+
+/**
+ * Remove a superlock from a file. Requires an explicit human-approved ticket string.
+ * This is the only command that can override a 'superlocked' file.
+ *
+ * @param {string} file     File path
+ * @param {string} ticket   Human-approved ticket (e.g. "JIRA-123" or "PR-456")
+ * @param {string} reason   Mandatory reason string
+ */
+function sudoUnlock(file, ticket, reason) {
+  if (!ticket || !reason) {
+    console.error('Usage: scopelock sudo-unlock <file> --human-approved=<ticket> <reason>');
+    process.exit(1);
+  }
+  const relativePath = file.replace(/\\/g, '/');
+  const manifest = getManifest();
+  ensureFileEntry(manifest, relativePath);
+  const entry = manifest.files[relativePath];
+
+  if (entry.status !== 'superlocked') {
+    console.error(`'${relativePath}' is not superlocked. Use 'scopelock unlock' instead.`);
+    process.exit(1);
+  }
+
+  entry.status = 'active';
+  entry.history.push({
+    timestamp:     new Date().toISOString(),
+    action:        'sudo-unlocked',
+    humanApproved: ticket,
+    reason,
+  });
+  saveManifest(manifest);
+  console.log(`🔓 SUDO-UNLOCKED ${relativePath}. Ticket: ${ticket}. Reason: ${reason}`);
+}
+
+/**
  * Unlock a file or a specific function.
  *
  * @param {string} target  "<file>" or "<file>:<functionName>"
@@ -206,6 +263,15 @@ function unlock(target, reason) {
     saveManifest(manifest);
     console.log(`🔓 Unlocked function '${funcName}' in ${relativePath}. Reason: ${reason}`);
   } else {
+    // Guard against bypassing a superlock with a normal unlock
+    if (entry.status === 'superlocked') {
+      console.error(
+        `❌ '${relativePath}' is SUPERLOCKED and cannot be unlocked with 'scopelock unlock'.\n` +
+        `   This path is a protected production route.\n` +
+        `   Use: scopelock sudo-unlock ${relativePath} --human-approved=<ticket> <reason>`
+      );
+      process.exit(1);
+    }
     entry.status = 'active';
     entry.history.push(historyEntry);
     saveManifest(manifest);
@@ -220,9 +286,10 @@ function status() {
   const manifest = getManifest();
   const files    = Object.entries(manifest.files);
 
-  const locked   = files.filter(([, v]) => v.status === 'locked');
-  const active   = files.filter(([, v]) => v.status === 'active');
-  const unscoped = files.filter(([, v]) => v.status === 'unscoped');
+  const superlocked = files.filter(([, v]) => v.status === 'superlocked');
+  const locked      = files.filter(([, v]) => v.status === 'locked');
+  const active      = files.filter(([, v]) => v.status === 'active');
+  const unscoped    = files.filter(([, v]) => v.status === 'unscoped');
 
   // Count locked functions across all files
   let lockedFnCount = 0;
@@ -294,4 +361,4 @@ function allowSecret(file, reason) {
   console.log(`⚠️  Secret Sentinel bypassed for ${relativePath}. Reason: ${reason}`);
 }
 
-module.exports = { init, lock, unlock, allowSecret, status, getManifest, saveManifest };
+module.exports = { init, lock, unlock, superlock, sudoUnlock, allowSecret, status, getManifest, saveManifest };

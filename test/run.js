@@ -156,6 +156,59 @@ console.log('\n--- Test 14: scopelock context output ---');
 const ctx = run(`${CLI} context "update the WIP function"`);
 assert(ctx.includes('SCOPE CONTEXT'), 'context output contains header');
 
+console.log('\n--- Test 15: Test Coverage Gate (Missing Tests) ---');
+fs.writeFileSync('feature.js', 'console.log("new logic");\n');
+run('git add feature.js');
+const testGateOut = run(`${CLI} check --require-tests`, true);
+assert(testGateOut.includes('TEST GATE VIOLATION'), 'check catches missing tests when flag is used');
+
+console.log('\n--- Test 16: Test Coverage Gate (Tests Provided) ---');
+fs.writeFileSync('feature.test.js', 'console.log("test for logic");\n');
+run('git add feature.test.js');
+const testGatePass = run(`${CLI} check --require-tests`);
+assert(testGatePass.includes('passed'), 'check passes when test files accompany source files');
+
+console.log('\n--- Test 17: Rollback Snapshot Creation ---');
+run(`${CLI} snapshot`);
+const m4 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
+assert(m4.lastSnapshot === 'clean' || m4.lastSnapshot === 'dirty', 'snapshot state is tracked in manifest');
+
+console.log('\n--- Test 18: Rollback Revert ---');
+fs.writeFileSync('rogue.js', 'I am a rogue agent destroying things');
+run(`${CLI} revert`);
+assert(!fs.existsSync('rogue.js'), 'revert destroys untracked rogue files');
+const m5 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
+assert(m5.lastSnapshot === null, 'revert clears the snapshot marker');
+
+console.log('\n--- Test 19: Production Path Lock (superlock) ---');
+run(`${CLI} superlock app.js "core auth logic — requires PR approval to modify"`);
+const m6 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
+assert(m6.files['app.js'].status === 'superlocked', 'superlock sets status to superlocked');
+
+console.log('\n--- Test 20: superlock blocks regular unlock ---');
+const superUnlockOut = run(`${CLI} unlock app.js "trying to bypass"`, true);
+assert(superUnlockOut.includes('SUPERLOCKED'), 'regular unlock is blocked on superlocked file');
+
+console.log('\n--- Test 21: superlock blocks scopelock check ---');
+fs.appendFileSync('app.js', '\n// rogue addition\n');
+const superCheckOut = run(`${CLI} check`, true);
+assert(superCheckOut.includes('SUPERLOCKED'), 'check reports SUPERLOCKED violation');
+run('git restore app.js');
+
+console.log('\n--- Test 22: sudo-unlock releases a superlock with ticket ---');
+run(`${CLI} sudo-unlock app.js --human-approved=JIRA-999 "approved by senior eng for critical hotfix"`);
+const m7 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
+assert(m7.files['app.js'].status === 'active', 'sudo-unlock transitions superlocked to active');
+const sudoHistory = m7.files['app.js'].history.find(h => h.action === 'sudo-unlocked');
+assert(sudoHistory && sudoHistory.humanApproved === 'JIRA-999', 'sudo-unlock logs the human-approved ticket');
+
+console.log('\n--- Test 23: Blast Radius Map ---');
+// Make app.js import readme.txt by creating an importer
+fs.writeFileSync('importer.js', `import { something } from './app';\n`);
+const blastOut = run(`${CLI} blast-radius app.js`);
+assert(blastOut.includes('Blast Radius'), 'blast-radius outputs the report header');
+assert(blastOut.includes('importer.js'), 'blast-radius correctly identifies importer.js as a dependent');
+
 // ─── Done ─────────────────────────────────────────────────────────────────────
 
-console.log('\n✅  All 14 tests passed.\n');
+console.log('\n✅  All 23 tests passed.\n');
