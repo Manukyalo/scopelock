@@ -10,7 +10,7 @@ AI coding agents default to the shortest path to a passing result — which freq
 This skill uses `scopelock` — a zero-dependency Node.js CLI — to enforce two tiers of scope protection:
 
 - **File-level:** An entire file is locked. No agent may touch it.
-- **Function-level:** A specific function within a file is locked. The file may be edited, but that function's body is off-limits. `scopelock check` detects if any changed line falls inside the locked function's boundaries.
+- **Function-level:** A specific function within a file is locked. The file may be edited, but that function's body is off-limits. `scopelock guard` detects if any changed line falls inside the locked function's boundaries.
 
 The skill operates at three checkpoints: **Session Start**, **Pre-Commit**, and **Post-Task Review**.
 
@@ -64,7 +64,7 @@ scopelock lock src/auth/token.ts:validateToken "tested, do not touch"
 
 **Step 4: Run the scope check.**
 ```bash
-scopelock check
+scopelock guard
 ```
 
 Two-tier enforcement:
@@ -87,7 +87,7 @@ git restore <file>
 *Genuinely required change:*
 ```bash
 scopelock unlock src/auth/token.ts:validateToken "fixing JWT expiry edge case"
-scopelock check   # must pass before committing
+scopelock guard   # must pass before committing
 ```
 
 ---
@@ -108,7 +108,7 @@ scopelock lock src/auth/token.ts:validateToken "fixed and re-locked"
 
 ```bash
 echo '#!/bin/sh
-scopelock check' > .git/hooks/pre-commit
+scopelock guard' > .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
 
@@ -123,14 +123,14 @@ chmod +x .git/hooks/pre-commit
 | "The agent said it needed to modify that function." | Then re-evaluate scope, not the lock. If you can't write a specific reason, the modification isn't justified. |
 | "Function-level locking is overkill." | File-level locking doesn't stop an agent from rewriting a critical function inside a file marked `active`. |
 | "The parser didn't detect my function." | Use file-level locking instead. Flag the miss — it's a parser bug, not a reason to skip protection. |
-| "Running `scopelock check` slows my commit flow." | Under 300ms. The alternative is debugging a hallucinated refactor for hours. |
+| "Running `scopelock guard` slows my commit flow." | Under 300ms. The alternative is debugging a hallucinated refactor for hours. |
 | ".scopelock.json shouldn't be committed." | Commit it. It's shared project state — your whole team and their agents benefit. |
 
 ---
 
 ## Red Flags
 
-- `scopelock check` reports violations in more than 2 files — significant scope drift.
+- `scopelock guard` reports violations in more than 2 files — significant scope drift.
 - An unlock entry has a vague reason string (e.g., "fix", "update") — bypassed without thinking.
 - The agent proposes unlocking multiple files at once with one generic reason — batch rationalization.
 - A locked function is reported as `function-missing` after a diff — it was deleted or renamed.
@@ -144,7 +144,7 @@ A session is compliant when ALL of the following are true:
 
 - [ ] `.scopelock.json` exists and `scopelock status` shows the expected locks.
 - [ ] `scopelock context "<task>"` output was injected into the agent before any code was written.
-- [ ] `scopelock check` exits `0` before every commit in this session.
+- [ ] `scopelock guard` exits `0` before every commit in this session.
 - [ ] Every `unlock` entry has a specific, task-justified reason string.
 - [ ] No diff contains modifications to locked files or lines inside locked function bodies that were not explicitly unlocked.
 - [ ] All modified files and functions have been reviewed for re-locking post-task.

@@ -1,6 +1,6 @@
 ---
 name: blast-radius-map
-description: "Godmode Skill: Before modifying any file, run 'scopelock blast-radius <file>' to see every other file that imports it. Prevents scope creep by making the full impact of a change visible BEFORE the agent writes a single line."
+description: "Godmode Skill: Before modifying any file, run 'scopelock impact <file>' to see every other file that imports it. Prevents scope creep by making the full impact of a change visible BEFORE the agent writes a single line."
 ---
 
 ## Overview
@@ -15,7 +15,7 @@ This skill instructs the agent to **check before it touches**, not after.
 
 1. Run the blast radius check first:
    ```bash
-   scopelock blast-radius src/utils/auth.ts
+   scopelock impact src/utils/auth.ts
    ```
 
 2. Read the output:
@@ -49,7 +49,7 @@ This skill instructs the agent to **check before it touches**, not after.
 
 5. Make your change to the target file only.
 
-6. Run `scopelock check` to verify no locked files were touched.
+6. Run `scopelock guard` to verify no locked files were touched.
 
 ## Why this exists
 

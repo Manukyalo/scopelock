@@ -55,60 +55,60 @@ switch (command) {
     break;
   }
 
-  case 'check':
-    git.check(args);
+  case 'guard':
+    git.guard(args);
     break;
 
   case 'status':
     manifest.status();
     break;
 
-  case 'blast-radius': {
+  case 'impact': {
     const target = args[0];
     if (!target) {
-      console.error('Usage: scopelock blast-radius <file>');
+      console.error('Usage: scopelock impact <file>');
       process.exit(1);
     }
     blast.printBlastRadius(target);
     break;
   }
 
-  case 'superlock': {
+  case 'seal': {
     const target = args[0];
-    const reason = args.slice(1).join(' ') || 'production path — superlock applied';
+    const reason = args.slice(1).join(' ') || 'production path — seal applied';
     if (!target) {
-      console.error('Usage: scopelock superlock <file> <reason>');
+      console.error('Usage: scopelock seal <file> <reason>');
       process.exit(1);
     }
-    manifest.superlock(target, reason);
+    manifest.seal(target, reason);
     break;
   }
 
-  case 'sudo-unlock': {
+  case 'unseal': {
     const target = args[0];
     const ticketArg = args.find(a => a.startsWith('--human-approved='));
     const ticket = ticketArg ? ticketArg.replace('--human-approved=', '') : null;
     const reason = args.filter(a => !a.startsWith('--')).slice(1).join(' ');
     if (!target || !ticket || !reason) {
-      console.error('Usage: scopelock sudo-unlock <file> --human-approved=<ticket> <reason>');
+      console.error('Usage: scopelock unseal <file> --human-approved=<ticket> <reason>');
       process.exit(1);
     }
-    manifest.sudoUnlock(target, ticket, reason);
+    manifest.unseal(target, ticket, reason);
     break;
   }
 
-  case 'allow-secret': {
+  case 'trust': {
     const target = args[0];
     const reason = args.slice(1).join(' ');
     if (!target || !reason) {
-      console.error('Usage: scopelock allow-secret <file> <reason>');
+      console.error('Usage: scopelock trust <file> <reason>');
       process.exit(1);
     }
-    manifest.allowSecret(target, reason);
+    manifest.trust(target, reason);
     break;
   }
 
-  case 'snapshot': {
+  case 'save': {
     try {
       const ts = new Date().toISOString().replace(/[:.]/g, '-');
       const manifestObj = manifest.getManifest();
@@ -129,7 +129,7 @@ switch (command) {
       }
 
       manifest.saveManifest(manifestObj);
-      console.log(`✅ Snapshot created. Run 'scopelock revert' to obliterate agent changes and restore this state.`);
+      console.log(`✅ Snapshot created. Run 'scopelock restore' to obliterate agent changes and restore this state.`);
     } catch (e) {
       console.error('Failed to create snapshot.', e.stderr || e.message);
       process.exit(1);
@@ -137,11 +137,11 @@ switch (command) {
     break;
   }
 
-  case 'revert': {
+  case 'restore': {
     try {
       const manifestObj = manifest.getManifest();
       if (!manifestObj.lastSnapshot) {
-        console.error('❌ No snapshot found. Run `scopelock snapshot` first.');
+        console.error('❌ No snapshot found. Run `scopelock save` first.');
         process.exit(1);
       }
       console.log(`Obliterating agent mess...`);
@@ -174,14 +174,14 @@ Usage:
   scopelock init                                    Scan repo and generate .scopelock.json
   scopelock lock <file>[:<func>] [reason]           Lock a file or a specific function
   scopelock unlock <file>[:<func>] <reason>          Unlock (reason is mandatory)
-  scopelock superlock <file> <reason>               Permanent production-path lock (no override)
-  scopelock sudo-unlock <file> --human-approved=<ticket> <reason>  Release a superlock
-  scopelock blast-radius <file>                     Show all files that import this file
-  scopelock allow-secret <file> <reason>            Bypass Secret Sentinel for a specific file
-  scopelock snapshot                                Auto-snapshot repo state before an agent session
-  scopelock revert                                  Rollback to the last snapshot
+  scopelock seal <file> <reason>                    Permanent production-path lock (no override)
+  scopelock unseal <file> --human-approved=<ticket> <reason>  Release a seal
+  scopelock impact <file>                           Show all files that import this file
+  scopelock trust <file> <reason>                   Bypass Secret Sentinel for a specific file
+  scopelock save                                    Auto-snapshot repo state before an agent session
+  scopelock restore                                 Rollback to the last snapshot
   scopelock context [task]                          Generate AI context block for a task
-  scopelock check [--require-tests]                 Check git diff for violations and secret leaks
+  scopelock guard [--tests]                         Check git diff for violations and secret leaks
   scopelock status                                  Show manifest summary
 
 
@@ -190,7 +190,7 @@ Examples:
   scopelock lock src/auth.ts:validateToken "stable — do not touch"
   scopelock unlock src/auth.ts:validateToken "need to fix JWT expiry bug"
   scopelock context "Fix the broken checkout flow"
-  scopelock check
+  scopelock guard
     `);
     process.exit(1);
 }

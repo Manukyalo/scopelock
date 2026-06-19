@@ -5,19 +5,19 @@ description: "Godmode Skill: Creates a one-command safety net before every agent
 
 ## Overview
 
-Before you let an agent loose on a codebase, you need a guaranteed escape hatch. `scopelock snapshot` creates that escape hatch using git's native stash mechanism. It is instant, requires no external tools, and can restore the repo to its exact pre-session state in under one second.
+Before you let an agent loose on a codebase, you need a guaranteed escape hatch. `scopelock save` creates that escape hatch using git's native stash mechanism. It is instant, requires no external tools, and can restore the repo to its exact pre-session state in under one second.
 
 ## How Storage Works
 
 - The snapshot is stored in **git's local stash** (`.git/refs/stash`) — it never leaves your machine and is never pushed to GitHub.
-- The `.scopelock.json` manifest stores a pointer (`lastSnapshot: "dirty" | "clean"`) so `scopelock revert` knows what to restore.
+- The `.scopelock.json` manifest stores a pointer (`lastSnapshot: "dirty" | "clean"`) so `scopelock restore` knows what to restore.
 - If you clone the repo on a new machine, the snapshot is gone — this is correct. Snapshots are session-scoped, not repository-scoped.
 
 ## Agent Protocol
 
 ### At the start of EVERY agent session:
 ```bash
-scopelock snapshot
+scopelock save
 ```
 This is the first command you run, before writing a single line of code.
 
@@ -26,7 +26,7 @@ Simply commit your work normally. The stash will remain in git until git's garba
 
 ### If the agent goes rogue:
 ```bash
-scopelock revert
+scopelock restore
 ```
 This command:
 1. Runs `git reset --hard HEAD` — obliterates all tracked file changes.

@@ -1,6 +1,6 @@
 ---
 name: dependency-lockdown
-description: "Godmode Skill: Prevents AI agents from silently adding or upgrading npm/pip/cargo packages. Dependency manifest files (package.json, requirements.txt, etc.) are automatically locked by scopelock on init. Any diff touching these files will fail scopelock check until explicitly unlocked with a reason."
+description: "Godmode Skill: Prevents AI agents from silently adding or upgrading npm/pip/cargo packages. Dependency manifest files (package.json, requirements.txt, etc.) are automatically locked by scopelock on init. Any diff touching these files will fail scopelock guard until explicitly unlocked with a reason."
 ---
 
 ## Overview
@@ -22,7 +22,7 @@ On `scopelock init`, the following files are **automatically locked** without an
    scopelock unlock package.json "adding zod for runtime validation of API responses"
    ```
 2. Make your change (add the dependency to the manifest).
-3. Run `scopelock check` to confirm the change is authorized.
+3. Run `scopelock guard` to confirm the change is authorized.
 4. Re-lock the manifest immediately after:
    ```bash
    scopelock lock package.json "dependencies updated and reviewed"

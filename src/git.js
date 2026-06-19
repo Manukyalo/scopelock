@@ -21,8 +21,8 @@ const { getChangedLines } = require('./diff');
 const { extractFunctions } = require('./parser');
 const { detectSecret }  = require('./secrets');
 
-function check(args = []) {
-  const requireTests = args.includes('--require-tests');
+function guard(args = []) {
+  const requireTests = args.includes('--tests');
   const manifest = getManifest();
   let diffOutput;
 
@@ -43,7 +43,7 @@ function check(args = []) {
     .filter(f => f.length > 0);
 
   if (changedFiles.length === 0) {
-    console.log('✅ Scope check passed — no changes detected.');
+    console.log('✅ Scope guard passed — no changes detected.');
     return;
   }
 
@@ -62,7 +62,7 @@ function check(args = []) {
       violations.push({
         type: 'test-gate',
         file: 'N/A',
-        message: 'TEST GATE VIOLATION: Source logic was modified, but no tests were added or updated. You must write tests to pass `--require-tests`.'
+        message: 'TEST GATE VIOLATION: Source logic was modified, but no tests were added or updated. You must write tests to pass `--tests`.'
       });
     }
   }
@@ -93,8 +93,8 @@ function check(args = []) {
     }
 
     // ── Tier 1: File-level lock ─────────────────────────────────────────────
-    if (entry && (entry.status === 'locked' || entry.status === 'superlocked')) {
-      const label = entry.status === 'superlocked' ? 'SUPERLOCKED' : 'LOCKED';
+    if (entry && (entry.status === 'locked' || entry.status === 'sealed')) {
+      const label = entry.status === 'sealed' ? 'SEALED' : 'LOCKED';
       violations.push({
         type: 'file',
         file: normalizedFile,
@@ -147,7 +147,7 @@ function check(args = []) {
 
   // ── Report ────────────────────────────────────────────────────────────────
   if (violations.length === 0) {
-    console.log('✅ Scope check passed — no locked files or functions were modified.');
+    console.log('✅ Scope guard passed — no locked files or functions were modified.');
     return;
   }
 
@@ -164,4 +164,4 @@ function check(args = []) {
   process.exit(1);
 }
 
-module.exports = { check };
+module.exports = { guard };

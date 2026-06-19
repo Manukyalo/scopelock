@@ -86,25 +86,25 @@ assert(m2.files['readme.txt'].status === 'locked', 'readme.txt is locked');
 
 console.log('\n--- Test 5: File-level violation detection ---');
 fs.appendFileSync('readme.txt', 'AI hallucinated this line.\n');
-const violation1 = run(`${CLI} check`, true);
-assert(violation1.includes('VIOLATION'), 'check detects locked file modification');
+const violation1 = run(`${CLI} guard`, true);
+assert(violation1.includes('VIOLATION'), 'guard detects locked file modification');
 
 console.log('\n--- Test 6: File-level unlock clears violation ---');
 run(`${CLI} unlock readme.txt "intentional update to docs"`);
-const check1 = run(`${CLI} check`);
-assert(check1.includes('passed'), 'check passes after unlock');
+const check1 = run(`${CLI} guard`);
+assert(check1.includes('passed'), 'guard passes after unlock');
 run('git restore readme.txt'); // clean up
 
 console.log('\n--- Test 7: Secret Sentinel detection ---');
 fs.appendFileSync('readme.txt', 'const stripe_key = "sk_test_12345abcdeABCDE12345abcd";\n');
-const secretViolation = run(`${CLI} check`, true);
-assert(secretViolation.includes('SECRET LEAK'), 'check detects leaked stripe key');
-assert(secretViolation.includes('Stripe Secret Key'), 'check identifies secret type');
+const secretViolation = run(`${CLI} guard`, true);
+assert(secretViolation.includes('SECRET LEAK'), 'guard detects leaked stripe key');
+assert(secretViolation.includes('Stripe Secret Key'), 'guard identifies secret type');
 
-console.log('\n--- Test 8: Secret Sentinel bypass (allow-secret) ---');
-run(`${CLI} allow-secret readme.txt "it is a mock key for tests"`);
-const secretCheck = run(`${CLI} check`);
-assert(secretCheck.includes('passed'), 'allow-secret successfully bypasses secret sentinel');
+console.log('\n--- Test 8: Secret Sentinel bypass (trust) ---');
+run(`${CLI} trust readme.txt "it is a mock key for tests"`);
+const secretCheck = run(`${CLI} guard`);
+assert(secretCheck.includes('passed'), 'trust successfully bypasses secret sentinel');
 run('git restore readme.txt'); // clean up
 
 console.log('\n--- Test 9: Function-level lock ---');
@@ -126,7 +126,7 @@ function workInProgress() {
   return 'actively being edited -- new change';
 }
 `.trimStart());
-const check2 = run(`${CLI} check`);
+const check2 = run(`${CLI} guard`);
 assert(check2.includes('passed'), 'change outside locked function does not trigger violation');
 
 console.log('\n--- Test 11: Change INSIDE locked function — violation ---');
@@ -139,14 +139,14 @@ function workInProgress() {
   return 'actively being edited -- new change';
 }
 `.trimStart());
-const violation2 = run(`${CLI} check`, true);
+const violation2 = run(`${CLI} guard`, true);
 assert(violation2.includes('VIOLATION'), 'change inside locked function triggers violation');
 assert(violation2.includes('stableFunc'), 'violation names the locked function');
 
 console.log('\n--- Test 12: Function unlock clears function-level violation ---');
 run(`${CLI} unlock app.js:stableFunc "need to update return value for new API"`);
-const check3 = run(`${CLI} check`);
-assert(check3.includes('passed'), 'check passes after function unlock');
+const check3 = run(`${CLI} guard`);
+assert(check3.includes('passed'), 'guard passes after function unlock');
 
 console.log('\n--- Test 13: Lock unknown function fails gracefully ---');
 const badLock = run(`${CLI} lock app.js:doesNotExist "testing"`, true);
@@ -159,55 +159,55 @@ assert(ctx.includes('SCOPE CONTEXT'), 'context output contains header');
 console.log('\n--- Test 15: Test Coverage Gate (Missing Tests) ---');
 fs.writeFileSync('feature.js', 'console.log("new logic");\n');
 run('git add feature.js');
-const testGateOut = run(`${CLI} check --require-tests`, true);
-assert(testGateOut.includes('TEST GATE VIOLATION'), 'check catches missing tests when flag is used');
+const testGateOut = run(`${CLI} guard --tests`, true);
+assert(testGateOut.includes('TEST GATE VIOLATION'), 'guard catches missing tests when flag is used');
 
 console.log('\n--- Test 16: Test Coverage Gate (Tests Provided) ---');
 fs.writeFileSync('feature.test.js', 'console.log("test for logic");\n');
 run('git add feature.test.js');
-const testGatePass = run(`${CLI} check --require-tests`);
-assert(testGatePass.includes('passed'), 'check passes when test files accompany source files');
+const testGatePass = run(`${CLI} guard --tests`);
+assert(testGatePass.includes('passed'), 'guard passes when test files accompany source files');
 
 console.log('\n--- Test 17: Rollback Snapshot Creation ---');
-run(`${CLI} snapshot`);
+run(`${CLI} save`);
 const m4 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
 assert(m4.lastSnapshot === 'clean' || m4.lastSnapshot === 'dirty', 'snapshot state is tracked in manifest');
 
 console.log('\n--- Test 18: Rollback Revert ---');
 fs.writeFileSync('rogue.js', 'I am a rogue agent destroying things');
-run(`${CLI} revert`);
-assert(!fs.existsSync('rogue.js'), 'revert destroys untracked rogue files');
+run(`${CLI} restore`);
+assert(!fs.existsSync('rogue.js'), 'restore destroys untracked rogue files');
 const m5 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
-assert(m5.lastSnapshot === null, 'revert clears the snapshot marker');
+assert(m5.lastSnapshot === null, 'restore clears the snapshot marker');
 
-console.log('\n--- Test 19: Production Path Lock (superlock) ---');
-run(`${CLI} superlock app.js "core auth logic — requires PR approval to modify"`);
+console.log('\n--- Test 19: Production Path Lock (seal) ---');
+run(`${CLI} seal app.js "core auth logic — requires PR approval to modify"`);
 const m6 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
-assert(m6.files['app.js'].status === 'superlocked', 'superlock sets status to superlocked');
+assert(m6.files['app.js'].status === 'sealed', 'seal sets status to sealed');
 
-console.log('\n--- Test 20: superlock blocks regular unlock ---');
+console.log('\n--- Test 20: seal blocks regular unlock ---');
 const superUnlockOut = run(`${CLI} unlock app.js "trying to bypass"`, true);
-assert(superUnlockOut.includes('SUPERLOCKED'), 'regular unlock is blocked on superlocked file');
+assert(superUnlockOut.includes('SEALED'), 'regular unlock is blocked on sealed file');
 
-console.log('\n--- Test 21: superlock blocks scopelock check ---');
+console.log('\n--- Test 21: seal blocks scopelock guard ---');
 fs.appendFileSync('app.js', '\n// rogue addition\n');
-const superCheckOut = run(`${CLI} check`, true);
-assert(superCheckOut.includes('SUPERLOCKED'), 'check reports SUPERLOCKED violation');
+const superCheckOut = run(`${CLI} guard`, true);
+assert(superCheckOut.includes('SEALED'), 'guard reports SEALED violation');
 run('git restore app.js');
 
-console.log('\n--- Test 22: sudo-unlock releases a superlock with ticket ---');
-run(`${CLI} sudo-unlock app.js --human-approved=JIRA-999 "approved by senior eng for critical hotfix"`);
+console.log('\n--- Test 22: unseal releases a seal with ticket ---');
+run(`${CLI} unseal app.js --human-approved=JIRA-999 "approved by senior eng for critical hotfix"`);
 const m7 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
-assert(m7.files['app.js'].status === 'active', 'sudo-unlock transitions superlocked to active');
-const sudoHistory = m7.files['app.js'].history.find(h => h.action === 'sudo-unlocked');
-assert(sudoHistory && sudoHistory.humanApproved === 'JIRA-999', 'sudo-unlock logs the human-approved ticket');
+assert(m7.files['app.js'].status === 'active', 'unseal transitions sealed to active');
+const sudoHistory = m7.files['app.js'].history.find(h => h.action === 'unsealed');
+assert(sudoHistory && sudoHistory.humanApproved === 'JIRA-999', 'unseal logs the human-approved ticket');
 
-console.log('\n--- Test 23: Blast Radius Map ---');
+console.log('\n--- Test 23: Blast Radius Map (impact) ---');
 // Make app.js import readme.txt by creating an importer
 fs.writeFileSync('importer.js', `import { something } from './app';\n`);
-const blastOut = run(`${CLI} blast-radius app.js`);
-assert(blastOut.includes('Blast Radius'), 'blast-radius outputs the report header');
-assert(blastOut.includes('importer.js'), 'blast-radius correctly identifies importer.js as a dependent');
+const blastOut = run(`${CLI} impact app.js`);
+assert(blastOut.includes('Blast Radius'), 'impact outputs the report header');
+assert(blastOut.includes('importer.js'), 'impact correctly identifies importer.js as a dependent');
 
 // ─── Done ─────────────────────────────────────────────────────────────────────
 
