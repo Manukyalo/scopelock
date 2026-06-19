@@ -21,7 +21,8 @@ const { getChangedLines } = require('./diff');
 const { extractFunctions } = require('./parser');
 const { detectSecret }  = require('./secrets');
 
-function check() {
+function check(args = []) {
+  const requireTests = args.includes('--require-tests');
   const manifest = getManifest();
   let diffOutput;
 
@@ -47,6 +48,24 @@ function check() {
   }
 
   const violations = [];
+  
+  // ── Tier -1: Test Coverage Gate ───────────────────────────────────────────
+  if (requireTests) {
+    const hasSourceChanges = changedFiles.some(f => 
+      !f.includes('.test.') && !f.includes('.spec.') && !f.includes('/test/') && !f.includes('/__tests__/') &&
+      (f.endsWith('.js') || f.endsWith('.ts') || f.endsWith('.py') || f.endsWith('.go') || f.endsWith('.rs'))
+    );
+    const hasTestChanges = changedFiles.some(f => 
+      f.includes('.test.') || f.includes('.spec.') || f.includes('/test/') || f.includes('/__tests__/')
+    );
+    if (hasSourceChanges && !hasTestChanges) {
+      violations.push({
+        type: 'test-gate',
+        file: 'N/A',
+        message: 'TEST GATE VIOLATION: Source logic was modified, but no tests were added or updated. You must write tests to pass `--require-tests`.'
+      });
+    }
+  }
 
   for (const file of changedFiles) {
     const normalizedFile = file.replace(/\\/g, '/');
