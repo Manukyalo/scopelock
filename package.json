@@ -1,0 +1,14 @@
+{
+  "name": "scopelock",
+  "version": "1.0.0",
+  "description": "Anti-hallucination scope locking for AI coding agents.",
+  "main": "bin/scopelock.js",
+  "bin": {
+    "scopelock": "./bin/scopelock.js"
+  },
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "author": "Emmanuel",
+  "license": "MIT"
+}

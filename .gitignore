@@ -1,0 +1,9 @@
+# Logs
+*.log
+
+# Test artifacts
+test/tmp_repo/
+
+# OS
+.DS_Store
+Thumbs.db
