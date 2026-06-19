@@ -1,6 +1,8 @@
-# scopelock v3.0
-
-**Anti-hallucination scope locking for AI coding agents.**
+<div align="center">
+  <img src="assets/logo.png" width="200" alt="scopelock logo" />
+  <h1>scopelock v3.0</h1>
+  <p><strong>Anti-hallucination scope locking for AI coding agents.</strong></p>
+</div>
 
 ```bash
 npm install -g @manukyalo/scopelock
