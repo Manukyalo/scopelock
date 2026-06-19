@@ -1,6 +1,6 @@
 ---
 name: scope-enforcement
-description: "Prevents AI agent scope creep by enforcing scopelock boundaries before, during, and after every coding task. Supports file-level and function-level locking. Use before writing any code, before every commit, and before any review or ship phase. Requires scopelock CLI (npm install -g scopelock)."
+description: "Prevents AI agent scope creep by enforcing scopelock boundaries before, during, and after every coding task. Supports file-level and function-level locking. Use before writing any code, before every commit, and before any review or ship phase. Requires scopelock CLI (npm install -g @manukyalo/scopelock)."
 ---
 
 ## Overview

@@ -3,7 +3,7 @@
 **Anti-hallucination scope locking for AI coding agents.**
 
 ```bash
-npm install -g scopelock
+npm install -g @manukyalo/scopelock
 ```
 
 `scopelock` solves a specific, well-documented problem: AI coding agents frequently exhibit scope creep — modifying files outside the intended change — and lack persistent project memory across sessions.
