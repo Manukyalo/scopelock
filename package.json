@@ -1,14 +1,26 @@
 {
-  "name": "@manukyalo/scopelock",
-  "version": "3.0.2",
-  "description": "Anti-hallucination scope locking for AI coding agents.",
-  "main": "bin/scopelock.js",
+  "name": "driftlock",
+  "version": "3.1.0",
+  "description": "AI agent scope enforcement for production codebases.",
+  "main": "bin/driftlock.js",
   "bin": {
-    "scopelock": "bin/scopelock.js"
+    "driftlock": "bin/driftlock.js"
   },
   "scripts": {
     "test": "node test/run.js"
   },
+  "engines": {
+    "node": ">=14"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "scope",
+    "guardrail",
+    "drift",
+    "security",
+    "cli"
+  ],
   "author": "Emmanuel",
   "license": "MIT",
   "skills": "./skills"

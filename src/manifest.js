@@ -30,7 +30,7 @@ const path = require('path');
 
 const { extractFunctions, detectLanguage } = require('./parser');
 
-const MANIFEST_FILE = '.scopelock.json';
+const MANIFEST_FILE = '.driftlock.json';
 const VERSION       = 2;
 
 // ─── Ignored directories ──────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ function walkDir(dir, fileList = []) {
 
 function getManifest() {
   if (!fs.existsSync(MANIFEST_FILE)) {
-    console.error(`No ${MANIFEST_FILE} found. Run 'scopelock init' first.`);
+    console.error(`No ${MANIFEST_FILE} found. Run 'driftlock init' first.`);
     process.exit(1);
   }
   return JSON.parse(fs.readFileSync(MANIFEST_FILE, 'utf8'));
@@ -96,7 +96,7 @@ function ensureFileEntry(manifest, relativePath) {
 // Ensure entry exists for 'init' function
 function init() {
   if (fs.existsSync(MANIFEST_FILE)) {
-    console.log(`.scopelock.json already exists. Use 'scopelock status' to view it.`);
+    console.log(`.driftlock.json already exists. Use 'driftlock status' to view it.`);
     return;
   }
 
@@ -113,7 +113,7 @@ function init() {
 
   saveManifest(manifest);
   console.log(`✅ Initialized ${MANIFEST_FILE} — ${count} source files tracked.`);
-  console.log(`   Run 'scopelock lock <file>' to protect files or functions.`);
+  console.log(`   Run 'driftlock lock <file>' to protect files or functions.`);
 }
 
 /**
@@ -197,7 +197,7 @@ function seal(file, reason) {
     reason,
   });
   saveManifest(manifest);
-  console.log(`🔐 SEALED ${relativePath}. Only 'scopelock unseal' with a human-approved ticket can release this.`);
+  console.log(`🔐 SEALED ${relativePath}. Only 'driftlock unseal' with a human-approved ticket can release this.`);
 }
 
 /**
@@ -266,9 +266,9 @@ function unlock(target, reason) {
     // Guard against bypassing a seal with a normal unlock
     if (entry.status === 'sealed') {
       console.error(
-        `❌ '${relativePath}' is SEALED and cannot be unlocked with 'scopelock unlock'.\n` +
+        `❌ '${relativePath}' is SEALED and cannot be unlocked with 'driftlock unlock'.\n` +
         `   This path is a protected production route.\n` +
-        `   Use: scopelock unseal ${relativePath} --human-approved=<ticket> <reason>`
+        `   Use: driftlock unseal ${relativePath} --human-approved=<ticket> <reason>`
       );
       process.exit(1);
     }

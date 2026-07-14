@@ -19,7 +19,7 @@ if (fs.existsSync(testDir)) fs.rmSync(testDir, { recursive: true, force: true })
 fs.mkdirSync(testDir, { recursive: true });
 process.chdir(testDir);
 
-const CLI = 'node ../../bin/scopelock.js';
+const CLI = 'node ../../bin/driftlock.js';
 
 function run(cmd, expectFail = false) {
   try {
@@ -67,8 +67,8 @@ run('git commit -m "initial"');
 
 console.log('\n--- Test 1: scopelock init ---');
 run(`${CLI} init`);
-assert(fs.existsSync('.scopelock.json'), '.scopelock.json was created');
-const manifest = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
+assert(fs.existsSync('.driftlock.json'), '.driftlock.json was created');
+const manifest = JSON.parse(fs.readFileSync('.driftlock.json', 'utf8'));
 assert(manifest.version === 2, 'Manifest is V2 schema');
 assert(manifest.files['app.js'] !== undefined, 'app.js is tracked');
 
@@ -81,7 +81,7 @@ assert(statusOut.includes('unscoped'), 'status shows unscoped files');
 
 console.log('\n--- Test 4: File-level lock ---');
 run(`${CLI} lock readme.txt "stable documentation"`);
-const m2 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
+const m2 = JSON.parse(fs.readFileSync('.driftlock.json', 'utf8'));
 assert(m2.files['readme.txt'].status === 'locked', 'readme.txt is locked');
 
 console.log('\n--- Test 5: File-level violation detection ---');
@@ -109,7 +109,7 @@ run('git restore readme.txt'); // clean up
 
 console.log('\n--- Test 9: Function-level lock ---');
 run(`${CLI} lock app.js:stableFunc "tested, production-ready"`);
-const m3 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
+const m3 = JSON.parse(fs.readFileSync('.driftlock.json', 'utf8'));
 assert(
   m3.files['app.js'].functions['stableFunc'].status === 'locked',
   'stableFunc is function-locked'
@@ -170,19 +170,19 @@ assert(testGatePass.includes('passed'), 'guard passes when test files accompany 
 
 console.log('\n--- Test 17: Rollback Snapshot Creation ---');
 run(`${CLI} save`);
-const m4 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
+const m4 = JSON.parse(fs.readFileSync('.driftlock.json', 'utf8'));
 assert(m4.lastSnapshot === 'clean' || m4.lastSnapshot === 'dirty', 'snapshot state is tracked in manifest');
 
 console.log('\n--- Test 18: Rollback Revert ---');
 fs.writeFileSync('rogue.js', 'I am a rogue agent destroying things');
 run(`${CLI} restore`);
 assert(!fs.existsSync('rogue.js'), 'restore destroys untracked rogue files');
-const m5 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
+const m5 = JSON.parse(fs.readFileSync('.driftlock.json', 'utf8'));
 assert(m5.lastSnapshot === null, 'restore clears the snapshot marker');
 
 console.log('\n--- Test 19: Production Path Lock (seal) ---');
 run(`${CLI} seal app.js "core auth logic — requires PR approval to modify"`);
-const m6 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
+const m6 = JSON.parse(fs.readFileSync('.driftlock.json', 'utf8'));
 assert(m6.files['app.js'].status === 'sealed', 'seal sets status to sealed');
 
 console.log('\n--- Test 20: seal blocks regular unlock ---');
@@ -197,7 +197,7 @@ run('git restore app.js');
 
 console.log('\n--- Test 22: unseal releases a seal with ticket ---');
 run(`${CLI} unseal app.js --human-approved=JIRA-999 "approved by senior eng for critical hotfix"`);
-const m7 = JSON.parse(fs.readFileSync('.scopelock.json', 'utf8'));
+const m7 = JSON.parse(fs.readFileSync('.driftlock.json', 'utf8'));
 assert(m7.files['app.js'].status === 'active', 'unseal transitions sealed to active');
 const sudoHistory = m7.files['app.js'].history.find(h => h.action === 'unsealed');
 assert(sudoHistory && sudoHistory.humanApproved === 'JIRA-999', 'unseal logs the human-approved ticket');
