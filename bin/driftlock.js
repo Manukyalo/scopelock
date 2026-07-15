@@ -18,6 +18,7 @@ const manifest = require('../src/manifest');
 const context  = require('../src/context');
 const git      = require('../src/git');
 const blast    = require('../src/blast');
+const gateway  = require('../src/license/gateway');
 
 const [,, command, ...args] = process.argv;
 
@@ -166,6 +167,64 @@ switch (command) {
     break;
   }
 
+  case 'login': {
+    const key = args[0];
+    if (!key) {
+      console.error('Usage: driftlock login <license-key>');
+      process.exit(1);
+    }
+    console.log('Verifying license with Gumroad...');
+    gateway.login(key).then(res => {
+      if (res.ok) {
+        console.log(`✅ Success! License activated.`);
+        console.log(`Tier: ${res.tier.toUpperCase()}`);
+        console.log(`Key:  ${res.masked_key}`);
+      } else {
+        console.error(`❌ Login failed: ${res.reason}`);
+        process.exit(1);
+      }
+    });
+    break;
+  }
+
+  case 'logout': {
+    gateway.logout();
+    console.log('✅ Logged out. License cleared from local cache.');
+    break;
+  }
+
+  case 'whoami': {
+    const status = gateway.whoami();
+    if (status.status === 'unlicensed') {
+      console.log('You are currently on the Free tier. No license active.');
+      console.log(`Upgrade here: ${require('../src/license/constants').GUMROAD_PURCHASE_URL}`);
+    } else {
+      console.log(`💳 License Status: ACTIVE`);
+      console.log(`Tier:          ${status.tier.toUpperCase()}`);
+      console.log(`Key:           ${status.masked_key}`);
+      console.log(`Last Verified: ${new Date(status.verifiedAt).toLocaleString()}`);
+      console.log(`Next Check:    ${new Date(status.nextCheckAt).toLocaleString()}`);
+      if (status.isStale) console.log('⚠️  Cache is stale, will re-verify on next Pro command.');
+    }
+    break;
+  }
+
+  case 'scout':
+  case 'audit':
+  case 'godmode': {
+    // Pro/Team commands gate
+    gateway.checkAccess('pro').then(res => {
+      if (!res.licensed) {
+        console.error(`\n🔒 '${command}' requires a Pro or Team license.`);
+        console.error(`Reason: ${res.reason}`);
+        console.error(`\nGet your license here: ${res.purchaseUrl}`);
+        process.exit(1);
+      }
+      console.log(`[${command}] is a Pro feature — implementation coming in next release.`);
+    });
+    break;
+  }
+
   default:
     console.log(`
 driftlock — AI agent scope enforcement for production codebases.
@@ -183,6 +242,14 @@ Usage:
   driftlock context [task]                          Generate AI context block for a task
   driftlock guard [--tests]                         Check git diff for violations and secret leaks
   driftlock status                                  Show manifest summary
+
+Account & Pro Features:
+  driftlock login <key>                             Activate your Gumroad license
+  driftlock logout                                  Remove local license cache
+  driftlock whoami                                  Check current license status
+  driftlock scout                                   [PRO] Coming soon
+  driftlock audit                                   [PRO] Coming soon
+  driftlock godmode                                 [PRO] Coming soon
 
 Examples:
   driftlock lock src/auth.ts
