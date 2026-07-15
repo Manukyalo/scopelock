@@ -1,6 +1,6 @@
 {
   "name": "driftlock",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "AI agent scope enforcement for production codebases.",
   "main": "bin/driftlock.js",
   "bin": {
