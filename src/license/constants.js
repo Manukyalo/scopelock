@@ -31,7 +31,6 @@ const COMMAND_TIERS = {
   // ── Pro (requires Pro or Team license) ────────────────────────────────────
   init:    'pro',
   seal:    'pro',
-  trust:   'pro',
   status:  'pro',
   save:    'pro',
   restore: 'pro',
@@ -40,10 +39,11 @@ const COMMAND_TIERS = {
   guard:   'pro',
   scout:   'pro',
   audit:   'pro',
-  godmode: 'pro',
 
   // ── Team (requires Team license) ──────────────────────────────────────────
   unseal:  'team',
+  trust:   'team',
+  godmode: 'team',
 };
 
 module.exports = {

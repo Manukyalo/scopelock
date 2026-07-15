@@ -12,15 +12,30 @@ npm install -g driftlock
 
 `driftlock` acts as a physical guardrail (via a pre-commit hook) and an architectural memory bank (via the context block) to keep agents strictly confined to their authorized scope.
 
-## Features
+## 🛡️ Core Protection Features (The Guardrails)
+- **File & Function Locks**: Surgical locking of specific files or even individual AST functions. If an AI agent tries to modify a locked function, the pre-commit hook hard-blocks it.
+- **Production Path Seals**: Permanent locks for critical paths (like billing or auth). These cannot be unlocked normally and require explicit human sign-off via a PR or Jira ticket (`driftlock unseal --human-approved=<ticket>`).
+- **Secret Sentinel**: A hard-blocking scanner that physically prevents agents from hallucinating and accidentally committing AWS keys, Stripe tokens, or `.env` leaks.
+- **Test Coverage Gate**: Strict enforcement that blocks any source code changes made by AI agents that aren't accompanied by corresponding tests.
+- **Dependency Lockdown**: Zero-trust dependency management. Automatically locks `package.json` on init to prevent silent dependency drift and hallucinated packages.
 
-- **File & Function Locks**: Run `driftlock lock src/auth.ts` or `driftlock lock src/auth.ts:validateToken` to make code read-only for agents.
-- **Production Path Locks (Seal)**: Use `driftlock seal` for critical paths like billing. Agents cannot override this; it requires explicit human sign-off via `driftlock unseal --human-approved=<ticket>`.
-- **Blast Radius Map**: Prevent scope creep *before* it happens. Run `driftlock impact <file>` to see every file that imports a target file before you touch it.
-- **Dependency Lockdown**: Zero-trust dependency management. Automatically locks `package.json` on init to prevent silent dependency drift.
-- **Secret Sentinel**: A hard-blocking pre-commit scanner that physically prevents agents from committing AWS keys, Stripe tokens, or `.env` leaks.
-- **Test Coverage Gate**: Run `driftlock guard --tests` to block any source code changes that aren't accompanied by tests.
-- **Rollback Snapshots**: Run `driftlock save` before an agent starts working, and `driftlock restore` to obliterate any rogue changes instantly.
+## 🛠️ Agent Tools (The Tooling)
+
+- **Blast Radius Map**: Prevent scope creep before it happens. Agents can run `driftlock impact <file>` to see every file in the codebase that imports a target file before they touch it.
+- **Rollback Snapshots**: Run `driftlock save` before an agent starts working. If the agent hallucinates or breaks the project, `driftlock restore` acts as an instant escape hatch to obliterate rogue changes and restore the clean snapshot.
+- **Context Generation**: Agents run `driftlock context` to generate a token-efficient map of locked vs. active boundaries to feed into their own system prompts.
+
+## 🤖 The 7 Native AI Skills (Drop-in for Claude/Antigravity/Cline)
+
+Driftlock ships with 7 markdown-based Agent Skills. If your team uses an agent framework, you just point it to these folders and the AI automatically learns how to use Driftlock safely:
+
+- `scope-enforcement`
+- `dependency-lockdown`
+- `secret-sentinel`
+- `test-coverage-gate`
+- `rollback-snapshot`
+- `blast-radius`
+- `production-path-lock`
 
 ---
 
@@ -35,17 +50,24 @@ Driftlock commands are gated by license tier (Free, Pro, Team).
 ### 🟡 Pro Tier (Requires Pro License)
 - `driftlock init` — Scan repo, generate `.driftlock.json`
 - `driftlock seal <file> <reason>` — Permanent lock for production paths
-- `driftlock trust <file> <reason>` — Bypass Secret Sentinel for a specific file
 - `driftlock status` — Print manifest summary
 - `driftlock save` — Auto-snapshot repo state before an agent session
 - `driftlock restore` — Rollback to the last snapshot
 - `driftlock impact <file>` — Show all files that import this file
 - `driftlock context [task]` — Generate AI context block for a task
 - `driftlock guard [--tests]` — Check git diff for violations and secret leaks
-- `driftlock scout / audit / godmode` — Advanced AI features (early access)
 
 ### 🔵 Team Tier (Requires Team License)
 - `driftlock unseal <file> --human-approved=<ticket> <reason>` — Release a sealed path
+- `driftlock trust <file> <reason>` — Bypass Secret Sentinel for a specific file (Security Override)
+
+---
+
+## 🚀 Upcoming Pro/Team Features (In Development)
+
+- **`driftlock scout` [PRO]**: Autonomous repository scanning for architectural drift.
+- **`driftlock audit` [PRO]**: AI-driven security and scope-violation auditing for team PRs.
+- **`driftlock godmode` [TEAM]**: Advanced cross-file refactoring with automated boundary expansion.
 
 ---
 
@@ -65,75 +87,6 @@ driftlock logout
 ```
 
 ---
-
-### `driftlock lock` & `unlock` [FREE]
-Lock a whole file or a specific named function. Unlock requires a reason that gets logged to history.
-
-```bash
-driftlock lock src/lib/supabase.ts "production client — stable"
-driftlock lock src/auth/token.ts:validateToken "tested — do not touch"
-driftlock unlock src/auth/token.ts:validateToken "fixing JWT expiry edge case"
-```
-
-### `driftlock seal` [FREE] & `unseal` [TEAM]
-For files that should *never* be touched without human oversight (e.g., `/billing`, `/migrations`). Seals cannot be removed by `unlock`.
-
-```bash
-driftlock seal src/billing/stripe.ts "core billing logic"
-driftlock unseal src/billing/stripe.ts --human-approved=PR-123 "updating webhook"
-```
-
-### `driftlock impact` [PRO]
-Before making a change, see the blast radius. Outputs a list of all files in the repository that import the target file.
-
-```bash
-driftlock impact src/utils/auth.ts
-```
-
-### `driftlock guard` [PRO]
-Two-tier scope violation check against `git diff HEAD`. Exits non-zero on violations or secret leaks. Wire this up as a `pre-commit` hook. Add `--tests` to strictly enforce test coverage for any changed logic.
-
-```bash
-driftlock guard
-driftlock guard --tests
-```
-
-### `driftlock save` & `restore` [PRO]
-Never fear an agent hallucination destroying your workspace again. `save` stores a snapshot in git stash that survives hard resets. `restore` obliterates the working directory and cleanly reverts to the snapshot.
-
-```bash
-driftlock save
-driftlock restore
-```
-
-### `driftlock trust` [FREE]
-Bypass the Secret Sentinel hard-block for a specific file (e.g., when intentionally committing a mock test key).
-
-```bash
-driftlock trust test/run.js "this is a mock stripe key for testing"
-```
-
-### `driftlock context` [PRO]
-Output a token-efficient AI context block with all locks clearly flagged for the agent's system prompt.
-
-```bash
-driftlock context "Update the login page"
-```
-
-## Agent Skills
-
-`driftlock` ships with 7 native AI Agent Skills located in the `skills/` folder.
-If you use an agent framework (like Antigravity or Cline) that supports Markdown skills, point it to these folders to automatically teach the agent how to use `driftlock` safely.
-
-The skills map directly to features:
-- `scope-enforcement`
-- `dependency-lockdown`
-- `secret-sentinel`
-- `test-coverage-gate`
-- `rollback-snapshot`
-- `blast-radius`
-- `production-path-lock`
-
 ## Data Model
 All state is stored in `.driftlock.json` at the root of your repo.
 The manifest is project state, not a personal config. Commit it so your whole team — and all their AI agents — share the same scope boundaries.
