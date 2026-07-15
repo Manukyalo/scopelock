@@ -20,25 +20,30 @@ const TIER_HIERARCHY = {
 };
 
 const COMMAND_TIERS = {
-  init: 'free',
-  lock: 'free',
-  unlock: 'free',
-  seal: 'free',
-  trust: 'free',
-  status: 'free',
-  save: 'pro',
+  // ── Free (no license required) ────────────────────────────────────────────
+  lock:    'free',
+  unlock:  'free',
+  // Account management — always free
+  login:   'free',
+  logout:  'free',
+  whoami:  'free',
+
+  // ── Pro (requires Pro or Team license) ────────────────────────────────────
+  init:    'pro',
+  seal:    'pro',
+  trust:   'pro',
+  status:  'pro',
+  save:    'pro',
   restore: 'pro',
-  impact: 'pro',
+  impact:  'pro',
   context: 'pro',
-  guard: 'pro',
-  scout: 'pro',
-  audit: 'pro',
+  guard:   'pro',
+  scout:   'pro',
+  audit:   'pro',
   godmode: 'pro',
-  unseal: 'team',
-  // Local gateway commands are fundamentally free/ungated but listed here for completeness
-  login: 'free',
-  logout: 'free',
-  whoami: 'free'
+
+  // ── Team (requires Team license) ──────────────────────────────────────────
+  unseal:  'team',
 };
 
 module.exports = {

@@ -29,13 +29,14 @@ npm install -g driftlock
 Driftlock commands are gated by license tier (Free, Pro, Team).
 
 ### 🟢 Free Tier (No license required)
-- `driftlock init` — Scan repo, generate `.driftlock.json`
 - `driftlock lock <file>[:<func>] [reason]` — Lock a file or function
 - `driftlock unlock <file>[:<func>] <reason>` — Unlock a target
-- `driftlock seal <file> <reason>` — Permanent lock for production paths
-- `driftlock status` — Print manifest summary
 
 ### 🟡 Pro Tier (Requires Pro License)
+- `driftlock init` — Scan repo, generate `.driftlock.json`
+- `driftlock seal <file> <reason>` — Permanent lock for production paths
+- `driftlock trust <file> <reason>` — Bypass Secret Sentinel for a specific file
+- `driftlock status` — Print manifest summary
 - `driftlock save` — Auto-snapshot repo state before an agent session
 - `driftlock restore` — Rollback to the last snapshot
 - `driftlock impact <file>` — Show all files that import this file
