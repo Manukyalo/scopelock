@@ -24,33 +24,48 @@ npm install -g driftlock
 
 ---
 
-## Commands
+## Commands & Tiers
 
-### 🛡️ Guardrails & Locks
-| Command | Description |
-| :--- | :--- |
-| `driftlock lock <file>[:<func>] [reason]` | Lock a file or a specific AST function |
-| `driftlock unlock <file>[:<func>] <reason>` | Unlock (reason is mandatory) |
-| `driftlock seal <file> <reason>` | Permanent production-path lock (cannot be unlocked normally) |
-| `driftlock unseal <file> --human-approved=<ticket> <reason>` | Release a seal with a Jira/PR ticket |
-| `driftlock guard [--tests]` | Wire as `pre-commit` to check diffs for violations & leaked secrets |
-| `driftlock trust <file> <reason>` | Explicitly bypass Secret Sentinel for a mock/test file |
+Driftlock commands are gated by license tier (Free, Pro, Team).
 
-### 🛠️ Agent Tools
-| Command | Description |
-| :--- | :--- |
-| `driftlock impact <file>` | Show the Blast Radius (all files importing this file) before modifying it |
-| `driftlock save` | Auto-snapshot repo state into a hidden git stash before an agent session |
-| `driftlock restore` | Instant escape hatch: obliterate agent changes and restore the snapshot |
-| `driftlock context [task]` | Generate a token-efficient AI context block mapping the locked boundaries |
+### 🟢 Free Tier (No license required)
+- `driftlock init` — Scan repo, generate `.driftlock.json`
+- `driftlock lock <file>[:<func>] [reason]` — Lock a file or function
+- `driftlock unlock <file>[:<func>] <reason>` — Unlock a target
+- `driftlock seal <file> <reason>` — Permanent lock for production paths
+- `driftlock status` — Print manifest summary
 
-### ⚙️ Core
-| Command | Description |
-| :--- | :--- |
-| `driftlock init` | Scan repo and generate `.driftlock.json` manifest |
-| `driftlock status` | Show a summary of all locked/sealed files |
+### 🟡 Pro Tier (Requires Pro License)
+- `driftlock save` — Auto-snapshot repo state before an agent session
+- `driftlock restore` — Rollback to the last snapshot
+- `driftlock impact <file>` — Show all files that import this file
+- `driftlock context [task]` — Generate AI context block for a task
+- `driftlock guard [--tests]` — Check git diff for violations and secret leaks
+- `driftlock scout / audit / godmode` — Advanced AI features (early access)
 
-### `driftlock lock` & `unlock`
+### 🔵 Team Tier (Requires Team License)
+- `driftlock unseal <file> --human-approved=<ticket> <reason>` — Release a sealed path
+
+---
+
+## License Activation
+
+Get your license here: [Driftlock Gumroad](https://kyalovibes.gumroad.com/l/lzozc)
+
+```bash
+# Activate your license
+driftlock login <license-key>
+
+# Check your tier and status
+driftlock whoami
+
+# Clear local license cache
+driftlock logout
+```
+
+---
+
+### `driftlock lock` & `unlock` [FREE]
 Lock a whole file or a specific named function. Unlock requires a reason that gets logged to history.
 
 ```bash
@@ -59,7 +74,7 @@ driftlock lock src/auth/token.ts:validateToken "tested — do not touch"
 driftlock unlock src/auth/token.ts:validateToken "fixing JWT expiry edge case"
 ```
 
-### `driftlock seal` & `unseal`
+### `driftlock seal` [FREE] & `unseal` [TEAM]
 For files that should *never* be touched without human oversight (e.g., `/billing`, `/migrations`). Seals cannot be removed by `unlock`.
 
 ```bash
@@ -67,14 +82,14 @@ driftlock seal src/billing/stripe.ts "core billing logic"
 driftlock unseal src/billing/stripe.ts --human-approved=PR-123 "updating webhook"
 ```
 
-### `driftlock impact`
+### `driftlock impact` [PRO]
 Before making a change, see the blast radius. Outputs a list of all files in the repository that import the target file.
 
 ```bash
 driftlock impact src/utils/auth.ts
 ```
 
-### `driftlock guard`
+### `driftlock guard` [PRO]
 Two-tier scope violation check against `git diff HEAD`. Exits non-zero on violations or secret leaks. Wire this up as a `pre-commit` hook. Add `--tests` to strictly enforce test coverage for any changed logic.
 
 ```bash
@@ -82,7 +97,7 @@ driftlock guard
 driftlock guard --tests
 ```
 
-### `driftlock save` & `restore`
+### `driftlock save` & `restore` [PRO]
 Never fear an agent hallucination destroying your workspace again. `save` stores a snapshot in git stash that survives hard resets. `restore` obliterates the working directory and cleanly reverts to the snapshot.
 
 ```bash
@@ -90,14 +105,14 @@ driftlock save
 driftlock restore
 ```
 
-### `driftlock trust`
+### `driftlock trust` [FREE]
 Bypass the Secret Sentinel hard-block for a specific file (e.g., when intentionally committing a mock test key).
 
 ```bash
 driftlock trust test/run.js "this is a mock stripe key for testing"
 ```
 
-### `driftlock context`
+### `driftlock context` [PRO]
 Output a token-efficient AI context block with all locks clearly flagged for the agent's system prompt.
 
 ```bash

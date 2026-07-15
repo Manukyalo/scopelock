@@ -40,8 +40,8 @@ async function runTests() {
   assert(loginResult.tier === 'pro', 'Tier resolved to pro');
   assert(loginResult.masked_key === 'VALID-KEY-****-****', 'Key is masked properly');
   
-  let access = await gateway.checkAccess('pro');
-  assert(access.licensed === true, 'checkAccess returns licensed for pro');
+  let access = await gateway.checkAccess('scout');
+  assert(access.licensed === true, 'checkAccess returns licensed for pro command (scout)');
 
   // Test 2: Valid Team license
   mockHttpClient = async () => ({
@@ -55,7 +55,7 @@ async function runTests() {
   
   // Test 3: Cached access within TTL
   mockHttpClient = async () => ({ success: false }); // Should not be called
-  access = await gateway.checkAccess('pro');
+  access = await gateway.checkAccess('scout');
   assert(access.licensed === true, 'Uses cache within TTL');
 
   // Test 4: Refunded license
@@ -81,13 +81,13 @@ async function runTests() {
   fs.writeFileSync(cachePath, JSON.stringify(cache));
   
   mockHttpClient = async () => { throw new Error('Network down'); };
-  access = await gateway.checkAccess('pro');
+  access = await gateway.checkAccess('scout');
   assert(access.licensed === true, 'Graceful degradation fallback works for network failure');
 
   // Test 7: Cache expired completely past grace period
   cache.verified_at = Date.now() - (12 * 24 * 60 * 60 * 1000); // 12 days ago (past 7+3 day grace period)
   fs.writeFileSync(cachePath, JSON.stringify(cache));
-  access = await gateway.checkAccess('pro');
+  access = await gateway.checkAccess('scout');
   assert(access.licensed === false, 'Access revoked after grace period expires');
   
   // Test 8: Tier hierarchy checking
@@ -98,7 +98,7 @@ async function runTests() {
   });
   await gateway.login('PRO-KEY');
   
-  access = await gateway.checkAccess('team');
+  access = await gateway.checkAccess('unseal');
   assert(access.licensed === false, 'Pro tier denied access to Team command');
   assert(access.reason.includes('requires team tier'), 'Clear tier requirement message');
 

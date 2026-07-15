@@ -23,7 +23,11 @@ const CLI = 'node ../../bin/driftlock.js';
 
 function run(cmd, expectFail = false) {
   try {
-    return execSync(cmd, { encoding: 'utf8', stdio: 'pipe' });
+    return execSync(cmd, { 
+      encoding: 'utf8', 
+      stdio: 'pipe',
+      env: { ...process.env, DRIFTLOCK_SKIP_LICENSE_CHECK: '1' }
+    });
   } catch (err) {
     if (expectFail) return err.stderr + err.stdout;
     console.error(`\nUnexpected failure running: ${cmd}`);

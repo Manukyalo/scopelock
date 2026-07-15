@@ -19,6 +19,28 @@ const TIER_HIERARCHY = {
   team: 2
 };
 
+const COMMAND_TIERS = {
+  init: 'free',
+  lock: 'free',
+  unlock: 'free',
+  seal: 'free',
+  trust: 'free',
+  status: 'free',
+  save: 'pro',
+  restore: 'pro',
+  impact: 'pro',
+  context: 'pro',
+  guard: 'pro',
+  scout: 'pro',
+  audit: 'pro',
+  godmode: 'pro',
+  unseal: 'team',
+  // Local gateway commands are fundamentally free/ungated but listed here for completeness
+  login: 'free',
+  logout: 'free',
+  whoami: 'free'
+};
+
 module.exports = {
   GUMROAD_PRODUCT_ID,
   GUMROAD_VERIFY_URL,
@@ -27,5 +49,6 @@ module.exports = {
   GRACE_PERIOD_MS,
   CACHE_DIR,
   CACHE_FILE,
-  TIER_HIERARCHY
+  TIER_HIERARCHY,
+  COMMAND_TIERS
 };

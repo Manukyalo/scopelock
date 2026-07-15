@@ -142,7 +142,16 @@ function logout() {
   clearCache();
 }
 
-async function checkAccess(requiredTier) {
+async function checkAccess(commandName) {
+  if (process.env.DRIFTLOCK_SKIP_LICENSE_CHECK) {
+    return { licensed: true, tier: 'team' };
+  }
+
+  const requiredTier = constants.COMMAND_TIERS[commandName] || 'free';
+  if (requiredTier === 'free') {
+    return { licensed: true, tier: 'free' };
+  }
+
   const cache = readCache();
   if (!cache || cache.status !== 'valid') {
     return { 
@@ -195,7 +204,8 @@ async function checkAccess(requiredTier) {
   if (currentTierLevel < requiredTierLevel) {
     return {
       licensed: false,
-      reason: `Command requires ${requiredTier} tier, but your license is ${cache.tier}.`,
+      reason: `'${commandName}' requires ${requiredTier} tier, but your license is ${cache.tier}.`,
+      requiredTier,
       purchaseUrl: constants.GUMROAD_PURCHASE_URL
     };
   }
