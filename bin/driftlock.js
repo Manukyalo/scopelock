@@ -27,7 +27,8 @@ async function run() {
   if (command) {
     const access = await gateway.checkAccess(command);
     if (!access.licensed) {
-      console.error(`\n🔒 '${command}' requires a ${access.requiredTier.toUpperCase()} or TEAM license.`);
+      const tierLabel = access.requiredTier ? ` a ${access.requiredTier.toUpperCase()} or TEAM` : 'a Pro or Team';
+      console.error(`\n🔒 '${command}' requires${tierLabel} license.`);
       console.error(`Reason: ${access.reason}`);
       console.error(`\nGet your license here: ${access.purchaseUrl}`);
       process.exit(1);
@@ -219,10 +220,31 @@ async function run() {
       break;
     }
 
-    case 'scout':
-    case 'audit':
     case 'godmode': {
-      console.log(`[${command}] is a Pro feature — implementation coming in next release.`);
+      const godmode = require('../src/godmode');
+      if (args[0] === '--off') {
+        godmode.disable();
+      } else {
+        const target = args[0];
+        if (!target) {
+          console.error('Usage: driftlock godmode <file> OR driftlock godmode --off');
+          process.exit(1);
+        }
+        godmode.enable(target);
+      }
+      break;
+    }
+
+    case 'audit': {
+      const audit = require('../src/audit');
+      const baseBranch = args[0] || 'origin/main';
+      audit.runAudit(baseBranch);
+      break;
+    }
+
+    case 'scout': {
+      const scout = require('../src/scout');
+      scout.runScout();
       break;
     }
 

@@ -7,7 +7,8 @@
     "driftlock": "bin/driftlock.js"
   },
   "scripts": {
-    "test": "node test/run.js"
+    "test": "node test/run.js",
+    "e2e": "node test/e2e.js"
   },
   "engines": {
     "node": ">=14"

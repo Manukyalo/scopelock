@@ -21,20 +21,17 @@ const { getChangedLines } = require('./diff');
 const { extractFunctions } = require('./parser');
 const { detectSecret }  = require('./secrets');
 
-function guard(args = []) {
-  const requireTests = args.includes('--tests');
+function getViolations(base = 'HEAD', requireTests = false) {
   const manifest = getManifest();
   let diffOutput;
 
   try {
-    diffOutput = execSync('git diff HEAD --name-only', {
+    diffOutput = execSync(`git diff ${base} --name-only`, {
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   } catch (err) {
-    console.error('git error — are you inside a git repository with at least one commit?');
-    console.error(err.message);
-    process.exit(1);
+    return { error: 'git error — are you inside a git repository with at least one commit?' };
   }
 
   const changedFiles = diffOutput
@@ -43,8 +40,7 @@ function guard(args = []) {
     .filter(f => f.length > 0);
 
   if (changedFiles.length === 0) {
-    console.log('✅ Scope guard passed — no changes detected.');
-    return;
+    return { violations: [] };
   }
 
   const violations = [];
@@ -71,11 +67,10 @@ function guard(args = []) {
     const normalizedFile = file.replace(/\\/g, '/');
     const entry          = manifest.files[normalizedFile];
 
-    const changedLines = getChangedLines(normalizedFile);
+    const changedLines = getChangedLines(normalizedFile, base);
 
     // ── Tier 0: Secret Sentinel ─────────────────────────────────────────────
     if (changedLines.size > 0) {
-      // Check if this file has explicitly allowed secrets
       const hasOverride = manifest.allowedSecrets && manifest.allowedSecrets[normalizedFile];
       if (!hasOverride) {
         for (const [lineNum, content] of changedLines.entries()) {
@@ -86,7 +81,7 @@ function guard(args = []) {
               file: normalizedFile,
               message: `SECRET LEAK [${secretType}] detected in '${normalizedFile}' on line ${lineNum}.`,
             });
-            break; // One secret violation per file is enough
+            break;
           }
         }
       }
@@ -100,7 +95,7 @@ function guard(args = []) {
         file: normalizedFile,
         message: `File '${normalizedFile}' is ${label}.`,
       });
-      continue; // No need to check functions if the whole file is locked
+      continue;
     }
 
     // ── Tier 2: Function-level lock ─────────────────────────────────────────
@@ -112,13 +107,11 @@ function guard(args = []) {
 
     if (lockedFunctions.length === 0) continue;
 
-    // Re-extract function boundaries from the current on-disk file
     const currentFunctions = extractFunctions(normalizedFile);
 
     for (const lockedFnName of lockedFunctions) {
       const fn = currentFunctions.find(f => f.name === lockedFnName);
       if (!fn) {
-        // Function was deleted or renamed — this itself is a violation
         violations.push({
           type:    'function-missing',
           file:    normalizedFile,
@@ -128,24 +121,34 @@ function guard(args = []) {
         continue;
       }
 
-      // Check if any changed line falls within the function's boundaries
       for (const line of changedLines.keys()) {
         if (line >= fn.startLine && line <= fn.endLine) {
           violations.push({
             type: 'function',
             file: normalizedFile,
             fn:   lockedFnName,
-            message:
-              `Locked function '${lockedFnName}' in '${normalizedFile}' was modified ` +
-              `(changed line ${line} is inside [${fn.startLine}–${fn.endLine}]).`,
+            message: `Locked function '${lockedFnName}' in '${normalizedFile}' was modified (changed line ${line} is inside [${fn.startLine}–${fn.endLine}]).`,
           });
-          break; // One violation per function is enough
+          break;
         }
       }
     }
   }
 
-  // ── Report ────────────────────────────────────────────────────────────────
+  return { violations };
+}
+
+function guard(args = []) {
+  const requireTests = args.includes('--tests');
+  const result = getViolations('HEAD', requireTests);
+
+  if (result.error) {
+    console.error(result.error);
+    process.exit(1);
+  }
+
+  const { violations } = result;
+
   if (violations.length === 0) {
     console.log('✅ Scope guard passed — no locked files or functions were modified.');
     return;
@@ -164,4 +167,4 @@ function guard(args = []) {
   process.exit(1);
 }
 
-module.exports = { guard };
+module.exports = { guard, getViolations };

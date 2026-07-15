@@ -17,13 +17,14 @@ const HUNK_HEADER_RE = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/;
 
 /**
  * @param {string} filePath
+ * @param {string} [base='HEAD'] The git ref to compare against (e.g. 'HEAD', 'main', 'origin/main')
  * @returns {Map<number, string>}  1-indexed line numbers -> line content that changed in the new file.
  */
-function getChangedLines(filePath) {
+function getChangedLines(filePath, base = 'HEAD') {
   let diffOutput;
   try {
     // Use -- to prevent ambiguity between file names and git flags.
-    diffOutput = execSync(`git diff HEAD -- "${filePath}"`, {
+    diffOutput = execSync(`git diff ${base} -- "${filePath}"`, {
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'ignore'],  // suppress git's stderr in normal use
     });

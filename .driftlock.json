@@ -1,0 +1,188 @@
+{
+  "version": 2,
+  "files": {
+    ".env": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    ".env.example": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    ".gitignore": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    ".npmignore": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "assets/logo.png": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "bin/driftlock.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "package.json": {
+      "status": "locked",
+      "functions": {},
+      "history": [
+        {
+          "timestamp": "2026-07-15T19:08:58.142Z",
+          "action": "locked",
+          "reason": "auto-locked dependency manifest"
+        }
+      ]
+    },
+    "README.md": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "skills/blast-radius/SKILL.md": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "skills/dependency-lockdown/SKILL.md": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "skills/production-path-lock/SKILL.md": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "skills/rollback-snapshot/SKILL.md": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "skills/scope-enforcement/SKILL.md": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "skills/secret-sentinel/SKILL.md": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "skills/test-coverage-gate/SKILL.md": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "src/blast.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "src/context.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "src/diff.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "src/git.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "src/godmode.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "src/license/constants.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "src/license/gateway.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "src/manifest.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "src/parser.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "src/secrets.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "test/license.test.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "test/run.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "test/tmp_repo/.driftlock.json": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "test/tmp_repo/app.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "test/tmp_repo/feature.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "test/tmp_repo/feature.test.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "test/tmp_repo/importer.js": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    },
+    "test/tmp_repo/package.json": {
+      "status": "locked",
+      "functions": {},
+      "history": [
+        {
+          "timestamp": "2026-07-15T19:08:58.143Z",
+          "action": "locked",
+          "reason": "auto-locked dependency manifest"
+        }
+      ]
+    },
+    "test/tmp_repo/readme.txt": {
+      "status": "unscoped",
+      "functions": {},
+      "history": []
+    }
+  },
+  "allowedSecrets": {}
+}
