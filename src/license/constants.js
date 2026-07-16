@@ -21,29 +21,29 @@ const TIER_HIERARCHY = {
 
 const COMMAND_TIERS = {
   // ── Free (no license required) ────────────────────────────────────────────
+  init:    'free',
   lock:    'free',
   unlock:  'free',
+  status:  'free',
   // Account management — always free
   login:   'free',
   logout:  'free',
   whoami:  'free',
 
   // ── Pro (requires Pro or Team license) ────────────────────────────────────
-  init:    'pro',
-  seal:    'pro',
-  status:  'pro',
+  guard:   'pro',
   save:    'pro',
   restore: 'pro',
   impact:  'pro',
   context: 'pro',
-  guard:   'pro',
-  scout:   'pro',
-  audit:   'pro',
+  seal:    'pro',
 
   // ── Team (requires Team license) ──────────────────────────────────────────
   unseal:  'team',
   trust:   'team',
   godmode: 'team',
+  scout:   'team',
+  audit:   'team',
 };
 
 module.exports = {

@@ -44,30 +44,25 @@ Driftlock ships with 7 markdown-based Agent Skills. If your team uses an agent f
 Driftlock commands are gated by license tier (Free, Pro, Team).
 
 ### 🟢 Free Tier (No license required)
+- `driftlock init` — Scan repo, generate `.driftlock.json`
 - `driftlock lock <file>[:<func>] [reason]` — Lock a file or function
 - `driftlock unlock <file>[:<func>] <reason>` — Unlock a target
+- `driftlock status` — Print manifest summary
 
 ### 🟡 Pro Tier (Requires Pro License)
-- `driftlock init` — Scan repo, generate `.driftlock.json`
-- `driftlock seal <file> <reason>` — Permanent lock for production paths
-- `driftlock status` — Print manifest summary
 - `driftlock save` — Auto-snapshot repo state before an agent session
 - `driftlock restore` — Rollback to the last snapshot
 - `driftlock impact <file>` — Show all files that import this file
 - `driftlock context [task]` — Generate AI context block for a task
 - `driftlock guard [--tests]` — Check git diff for violations and secret leaks
+- `driftlock seal <file> <reason>` — Permanent lock for production paths
 
 ### 🔵 Team Tier (Requires Team License)
 - `driftlock unseal <file> --human-approved=<ticket> <reason>` — Release a sealed path
 - `driftlock trust <file> <reason>` — Bypass Secret Sentinel for a specific file (Security Override)
-
----
-
-## 🚀 Upcoming Pro/Team Features (In Development)
-
-- **`driftlock scout` [PRO]**: Autonomous repository scanning for architectural drift.
-- **`driftlock audit` [PRO]**: AI-driven security and scope-violation auditing for team PRs.
-- **`driftlock godmode` [TEAM]**: Advanced cross-file refactoring with automated boundary expansion.
+- `driftlock godmode <file>` — Advanced cross-file refactoring with automated boundary expansion
+- `driftlock scout` — Autonomous repository scanning for architectural drift
+- `driftlock audit <branch>` — AI-driven security and scope-violation auditing for team PRs
 
 ---
 
