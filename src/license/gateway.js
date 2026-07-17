@@ -93,7 +93,7 @@ function defaultHttpClient(url, data) {
 async function verifyWithGumroad(licenseKey) {
   try {
     const data = await _httpClient(constants.GUMROAD_VERIFY_URL, {
-      product_permalink: constants.GUMROAD_PRODUCT_ID,
+      product_id: constants.GUMROAD_PRODUCT_ID,
       license_key: licenseKey,
       increment_uses_count: 'false'
     });

@@ -3,7 +3,7 @@
 const os = require('os');
 const path = require('path');
 
-const GUMROAD_PRODUCT_ID = 'lzozc';
+const GUMROAD_PRODUCT_ID = 'SKm5C6CMus98BoIxYV9zww==';
 const GUMROAD_VERIFY_URL = 'https://api.gumroad.com/v2/licenses/verify';
 const GUMROAD_PURCHASE_URL = 'https://kyalovibes.gumroad.com/l/lzozc';
 
